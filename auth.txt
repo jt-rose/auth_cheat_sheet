@@ -1,0 +1,80 @@
+AUTH CHEAT-SHEET (Node/ Express)
+
+1. Set up redis
+    a. yarn add ioredis redisConnect express-session as session
+    b. set up new redis store (redisConnect with session)
+    c. set up new redis connection (automatically connect to localhost)
+
+    sample:
+        const RedisStore = connectRedis(session) // store in session
+        const redis = new Redis() // new redis connection
+
+
+
+2. Set up express-session
+    a. store sensitive variables, like cookie secret and db url, in .env file with 
+        gitignore set to not track them
+    b. app.use() session with cookie settings, secret, and redis store settings
+
+    sample:
+        app.use(
+    session({
+      name: 'qid',
+      store: new RedisStore({
+        client: redis,
+        disableTouch: true,
+      }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
+      secret: process.env.COOKIE_SECRET as string,
+      resave: false,
+      saveUninitialized: false,
+    })
+  )
+
+
+
+3. Set up auth-functions
+    a. fetchUser
+        // check if userid on req.session
+        // reject if not found
+        // if found, check against DB for user
+        // if not found, reject and request sign in
+        // if found, return user (if needed)
+
+    b. createUser
+        // validate data -> length, char type, username not taken ( could handle later in db query)
+        // reject if errors
+        // hash password
+        // enter user into users table
+        // reject if user already exists (could posisbly do before hashing password)
+        // set user id to req.session.userid
+        // return user info if needed
+
+    c. login
+        // check for user in db
+        // reject if user not found
+        // check hashed password against submitted password
+        // if wrong, reject with wrong password
+        // if matching, set req.session.userid
+        // and return user (if needed)
+
+    d. logout
+        // req.session.destroy the cookie name
+
+
+4. Optional: Set up auth middleware
+5. Optional: set up Apollo caching
+
+!!! ALWAYS REMEMBER TO ESCAPE USER-SUBMITTED CONTENT TO AVOID XSS / SQL INJECTIONS !!! 
+Slonik, tagged template literal strings through the sql library, 
+and most ORMS should handle this for you, but raw sql is still vulnerable
+and should always use substitutions
+
+sample:
+
+pg.query('SELECT * FROM some_table WHERE some_column = $1', ['bananas'])
