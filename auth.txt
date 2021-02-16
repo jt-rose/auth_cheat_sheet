@@ -67,8 +67,13 @@ AUTH CHEAT-SHEET (Node/ Express)
         // req.session.destroy the cookie name
 
 
-4. Optional: Set up auth middleware
-5. Optional: set up Apollo caching
+4. Confirm auth on protected pages
+    a. check for req.session.userid
+    b. redirect to login if none found or no matching user
+    c. Optional: add url params to return to protected page once authenticated
+
+5. Optional: Set up auth middleware/ function to stay DRY
+6. Optional: set up caching through Apollo, etc., but rememeber to invalidate cache upon logout
 
 !!! ALWAYS REMEMBER TO ESCAPE USER-SUBMITTED CONTENT TO AVOID XSS / SQL INJECTIONS !!! 
 Slonik, tagged template literal strings through the sql library, 
@@ -77,4 +82,9 @@ and should always use substitutions
 
 sample:
 
+BAD:
+pg.query(`SELECT * FROM some_table WHERE some_column = ${'bananas'}`)
+
+GOOD:
 pg.query('SELECT * FROM some_table WHERE some_column = $1', ['bananas'])
+slonik.query(sql`SELECT * FROM some_table WHERE some_column = ${'bananas'}`)
